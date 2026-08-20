@@ -1,0 +1,27 @@
+# Archivos EDI generados (no versionar)
+salidas/
+
+# Logs de actividad (no versionar)
+logs/
+
+# Python
+__pycache__/
+*.pyc
+
+# Node
+node_modules/
+dist/
+
+# Entorno / local
+.env
+
+# Credenciales ofuscadas generadas en el build (NUNCA versionar)
+config_secretos.py
+
+# Llave privada SFTP (NUNCA versionar)
+ACG_RSA.pem
+*.pem
+
+# Artefactos de PyInstaller
+build/
+backend/dist/
