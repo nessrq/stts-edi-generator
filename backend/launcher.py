@@ -8,6 +8,7 @@ solo hace doble clic y ve la app, sin configurar nada.
 import os
 import sys
 import threading
+import traceback
 import webbrowser
 
 
@@ -27,19 +28,40 @@ def _abrir_navegador(host, port):
         pass
 
 
+def _ruta_log():
+    # Junto al ejecutable (escribible) para capturar errores de arranque.
+    if getattr(sys, "frozen", False):
+        base = os.path.dirname(os.path.abspath(sys.executable))
+    else:
+        base = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(base, "error.log")
+
+
 def main():
-    _preparar_rutas()
+    try:
+        _preparar_rutas()
 
-    import uvicorn
-    from api import app
+        import uvicorn
+        from api import app
 
-    host = "127.0.0.1"
-    port = 8005
+        host = "127.0.0.1"
+        port = 8005
 
-    # Abre el navegador unos instantes después de arrancar el servidor.
-    threading.Timer(1.2, _abrir_navegador, args=(host, port)).start()
+        # Abre el navegador unos instantes después de arrancar el servidor.
+        threading.Timer(1.2, _abrir_navegador, args=(host, port)).start()
 
-    uvicorn.run(app, host=host, port=port, log_level="warning")
+        uvicorn.run(app, host=host, port=port, log_level="warning")
+    except Exception:
+        tb = traceback.format_exc()
+        print(tb)
+        try:
+            with open(_ruta_log(), "w", encoding="utf-8") as f:
+                f.write(tb)
+            print(f"\nSe escribió el detalle del error en: {_ruta_log()}")
+        except Exception:
+            pass
+        input("\nOcurrió un error. Presiona Enter para cerrar...")
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

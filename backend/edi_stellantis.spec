@@ -11,6 +11,8 @@
 
 import os
 
+from PyInstaller.utils.hooks import collect_all
+
 # SPECPATH es la ruta del directorio del .spec (lo provee PyInstaller).
 backend_dir = os.path.abspath(SPECPATH)
 frontend_dist = os.path.normpath(
@@ -22,9 +24,6 @@ hiddenimports = [
     "keyring.backends.Windows",
     "keyring.backends.SecretService",
     "keyring.backends.macOS",
-    "pandas",
-    "openpyxl",
-    "paramiko",
     "uvicorn.logging",
     "uvicorn.loops",
     "uvicorn.loops.auto",
@@ -38,6 +37,18 @@ hiddenimports = [
 ]
 
 datas = []
+binaries = []
+
+# numpy 2.x divide sus extensiones C en numpy._core; PyInstaller no las detecta
+# todas por sí solo (p.ej. numpy._core._exceptions). collect_all recoge todos
+# los submódulos, binarios y datos de estas librerías para evitar el error
+# "No module named 'numpy._core._exceptions'" al arrancar el .exe.
+for _pkg in ("numpy", "pandas", "openpyxl"):
+    _d, _b, _h = collect_all(_pkg)
+    datas += _d
+    binaries += _b
+    hiddenimports += _h
+
 if os.path.isdir(frontend_dist):
     # El frontend compilado se incluye como carpeta "frontend" dentro del bundle.
     datas.append((frontend_dist, "frontend"))
@@ -45,7 +56,7 @@ if os.path.isdir(frontend_dist):
 a = Analysis(
     [os.path.join(backend_dir, "launcher.py")],
     pathex=[backend_dir],
-    binaries=[],
+    binaries=binaries,
     datas=datas,
     hiddenimports=hiddenimports,
     hookspath=[],
