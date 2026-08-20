@@ -2,12 +2,11 @@ name: Build EDI-Stellantis.exe
 
 on:
   push:
-    branches: [ main, master ]
     tags: [ 'v*' ]
   workflow_dispatch: {}  # permite disparar el build manualmente
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -59,7 +58,20 @@ jobs:
         working-directory: backend
         run: pyinstaller edi_stellantis.spec --noconfirm
 
-      - name: Upload .exe artifact
+      # ---------- Publicación ----------
+      # Al pushear un tag (v1.0.0), crea un Release y adjunta el .exe.
+      - name: Create GitHub Release and attach .exe
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: backend/dist/EDI-Stellantis.exe
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Fallback: en disparo manual (sin tag), se sube como artefacto.
+      - name: Upload .exe as artifact (manual runs)
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         uses: actions/upload-artifact@v4
         with:
           name: EDI-Stellantis-exe

@@ -10,9 +10,9 @@
 # por lo que el .exe es una sola aplicación web en http://127.0.0.1:8005.
 
 import os
-import sys
 
-backend_dir = os.path.abspath(os.path.dirname(__file__))
+# SPECPATH es la ruta del directorio del .spec (lo provee PyInstaller).
+backend_dir = os.path.abspath(SPECPATH)
 frontend_dist = os.path.normpath(
     os.path.join(backend_dir, "..", "frontend", "dist")
 )
